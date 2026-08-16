@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登山難易度チェッカー｜距離・獲得標高から登山難易度を簡単診断</title>
+  <meta name="description" content="距離、獲得標高、コースタイム、最高標高などから登山難易度を数値化。富士山・富士宮ルートを100とした難易度指数を簡単に診断できます。">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">MOUNTAIN DIFFICULTY CHECKER</p>
+      <h1>登山難易度チェッカー</h1>
+      <p class="lead">
+        距離・獲得標高・コースタイム・登山道などから、登山難易度をかんたんに数値化。
+      </p>
+      <div class="hero-badge">富士山・富士宮ルート ＝ 100</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>かんたん診断</h2>
+      <p class="section-description">
+        基本5項目は必須です。技術情報は、分かる場合だけ入力してください。
+      </p>
+
+      <div class="form-group">
+        <label for="distance">総距離 <span class="required">必須</span></label>
+        <div class="input-row">
+          <input type="number" id="distance" min="0.1" step="0.1" placeholder="例：10.4">
+          <span>km</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="elevation">累積上昇標高差（獲得標高） <span class="required">必須</span></label>
+        <div class="input-row">
+          <input type="number" id="elevation" min="0" step="1" placeholder="例：1132">
+          <span>m</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>標準コースタイム <span class="required">必須</span></label>
+        <div class="time-row">
+          <div class="input-row">
+            <input type="number" id="hours" min="0" step="1" placeholder="6">
+            <span>時間</span>
+          </div>
+          <div class="input-row">
+            <input type="number" id="minutes" min="0" max="59" step="1" placeholder="25">
+            <span>分</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="altitude">最高標高 <span class="required">必須</span></label>
+        <div class="input-row">
+          <input type="number" id="altitude" min="0" step="1" placeholder="例：2077">
+          <span>m</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="routeType">行程タイプ <span class="required">必須</span></label>
+        <select id="routeType">
+          <option value="round">往復</option>
+          <option value="circuit">周回</option>
+          <option value="traverse">縦走</option>
+        </select>
+        <p class="small-note">※初期版では行程タイプは記録のみで、難易度補正にはまだ使用していません。</p>
+      </div>
+
+      <details class="optional-panel">
+        <summary>技術情報も入力する（任意）</summary>
+
+        <div class="form-group optional-first">
+          <label for="technical">技術的難所</label>
+          <select id="technical">
+            <option value="">不明・入力しない</option>
+            <option value="0">なし</option>
+            <option value="1.5">軽度</option>
+            <option value="3">あり</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="risk">滑落・転落危険箇所</label>
+          <select id="risk">
+            <option value="">不明・入力しない</option>
+            <option value="0">なし</option>
+            <option value="1.5">軽度</option>
+            <option value="3">あり</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="terrain">足場</label>
+          <select id="terrain">
+            <option value="">不明・入力しない</option>
+            <option value="0">歩きやすい</option>
+            <option value="2">やや歩きにくい</option>
+            <option value="4">歩きにくい</option>
+          </select>
+        </div>
+      </details>
+
+      <button id="calculateButton"><span>難易度を診断する</span><span class="button-arrow">→</span></button>
+    </section>
+
+    <section id="result" class="card result-card hidden">
+      <p class="result-eyebrow">DIFFICULTY INDEX</p>
+      <p class="result-label">このルートの難易度指数</p>
+      <div id="difficultyNumber" class="difficulty-number">0</div>
+      <div id="difficultyClass" class="difficulty-class">初級</div>
+
+      <div class="meter-grid">
+        <div class="level-box">
+          <p>体力レベル</p>
+          <div id="staminaStars" class="stars">☆☆☆☆☆</div>
+        </div>
+        <div class="level-box">
+          <p>技術レベル</p>
+          <div id="technicalStars" class="stars">未判定</div>
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div><span>基本指数</span><strong id="baseScore">0</strong></div>
+        <div><span>技術等の補正</span><strong id="optionalBonus">+0</strong></div>
+        <div><span>診断精度</span><strong id="confidence">基本</strong></div>
+      </div>
+
+      <div class="comparison-box">
+        <h3>近い難易度のルート</h3>
+        <div id="comparisonList"></div>
+      </div>
+
+      <div class="fuji-box">
+        <strong>富士山・富士宮ルート ＝ 100</strong>
+        <p id="fujiComparison"></p>
+      </div>
+
+      <div id="missingTechWarning" class="warning-box hidden">
+        <strong>技術情報が未入力です</strong>
+        <p>
+          この指数は主に体力面から算出しています。指数が低くても安全なルートとは限りません。
+          鎖場・ロープ場・岩場・滑落危険箇所など、最新のルート情報を必ず確認してください。
+        </p>
+      </div>
+
+      <div class="calculation-info">
+        <h3>この指数について</h3>
+        <p>
+          総距離・獲得標高・標準コースタイムを中心に、体力的な負荷を重視して算出しています。
+        </p>
+        <p>
+          最高標高が2000m以上の場合は高所補正を加えます。
+          ただし標準コースタイムが短いルートでは、高所補正を軽減します。
+        </p>
+      </div>
+    </section>
+
+    <section class="card explanation">
+      <h2>難易度の目安</h2>
+      <div class="difficulty-table">
+        <div><strong>初級</strong><span>0以上 ～ 36未満</span></div>
+        <div><strong>中級</strong><span>36以上 ～ 81未満</span></div>
+        <div><strong>上級</strong><span>81以上</span></div>
+      </div>
+      <p>
+        難易度指数100は富士山・富士宮ルートを基準としています。100が上限ではありません。
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      ※本診断は無雪期・一般的な天候条件を想定した目安です。
+      実際の難易度は天候、路面状況、体調、装備、経験などによって変化します。
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
