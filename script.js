@@ -1,1259 +1,2210 @@
-* {
-  box-sizing: border-box;
-}
+const calculateButton =
+  document.getElementById(
+    "calculateButton"
+  );
 
 
-:root {
-
-  --forest: #31543b;
-
-  --forest-dark: #203a29;
-
-  --forest-light: #edf3ed;
-
-  --text: #28332b;
-
-  --muted: #6f786f;
-
-  --line: #dce4dc;
-
-  --cream: #f3f1e9;
-
-}
+const clearSavedBaselineButton =
+  document.getElementById(
+    "clearSavedBaseline"
+  );
 
 
-html {
-  scroll-behavior: smooth;
-}
+const saveBaselineCheckbox =
+  document.getElementById(
+    "saveBaseline"
+  );
 
 
-body {
-
-  margin: 0;
-
-  font-family:
-    "Yu Gothic",
-    "YuGothic",
-    "Hiragino Kaku Gothic ProN",
-    sans-serif;
-
-  color:
-    var(--text);
-
-  background:
-    var(--cream);
-
-}
+const BASELINE_STORAGE_KEY =
+  "mountainDifficultySavedBaselineV1";
 
 
 
-/* ========================================
-   ヘッダー
-======================================== */
+/* ==========================================
+   比較用ルート
+   Ver.0.3
+========================================== */
 
-.hero {
+const referenceMountains = [
 
-  padding:
-    60px 20px
-    72px;
+  {
+    name: "小樽赤岩山",
+    score: 16
+  },
 
-  color:
-    white;
+  {
+    name: "大雪山黒岳・7合目",
+    score: 20
+  },
 
-  background:
-    linear-gradient(
-      140deg,
-      #1d3525,
-      #486c4e
+  {
+    name: "八剣山・南口登山口",
+    score: 24
+  },
+
+  {
+    name: "乗鞍岳・畳平～剣ヶ峰",
+    score: 27
+  },
+
+  {
+    name: "大雪山旭岳・姿見駅",
+    score: 35
+  },
+
+  {
+    name: "尻別岳・留寿都登山口",
+    score: 35
+  },
+
+  {
+    name: "十勝岳・望岳台",
+    score: 49
+  },
+
+  {
+    name: "塔ノ岳・大倉登山口",
+    score: 63
+  },
+
+  {
+    name: "羊蹄山・倶知安コース",
+    score: 69
+  },
+
+  {
+    name: "利尻山・北麓野営場",
+    score: 71
+  },
+
+  {
+    name: "富士山・富士宮ルート",
+    score: 100
+  }
+
+];
+
+
+
+/* ==========================================
+   localStorage安全処理
+========================================== */
+
+function safeStorageGet(
+  key
+) {
+
+  try {
+
+    return localStorage.getItem(
+      key
     );
 
-}
+  }
 
+  catch (
+    error
+  ) {
 
-.hero-inner {
+    return null;
 
-  max-width:
-    760px;
-
-  margin:
-    auto;
-
-}
-
-
-.eyebrow,
-.section-kicker,
-.result-label {
-
-  margin-bottom:
-    8px;
-
-  font-size:
-    11px;
-
-  font-weight:
-    800;
-
-  letter-spacing:
-    .18em;
+  }
 
 }
 
 
-.eyebrow {
-  opacity: .7;
-}
 
+function safeStorageSet(
+  key,
+  value
+) {
 
-h1 {
+  try {
 
-  margin:
-    8px 0
-    16px;
-
-  font-size:
-    clamp(
-      34px,
-      7vw,
-      55px
+    localStorage.setItem(
+      key,
+      value
     );
 
+    return true;
+
+  }
+
+  catch (
+    error
+  ) {
+
+    return false;
+
+  }
+
 }
 
 
-.lead {
 
-  max-width:
-    620px;
+function safeStorageRemove(
+  key
+) {
 
-  line-height:
-    1.8;
+  try {
 
-}
-
-
-.hero-badge {
-
-  display:
-    inline-block;
-
-  margin-top:
-    20px;
-
-  padding:
-    9px 15px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .4
+    localStorage.removeItem(
+      key
     );
 
-  border-radius:
-    100px;
+    return true;
 
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      .12
+  }
+
+  catch (
+    error
+  ) {
+
+    return false;
+
+  }
+
+}
+
+
+
+/* ==========================================
+   初期処理
+========================================== */
+
+restoreSavedBaseline();
+
+
+
+calculateButton.addEventListener(
+  "click",
+  calculateDifficulty
+);
+
+
+
+clearSavedBaselineButton.addEventListener(
+  "click",
+  clearSavedBaseline
+);
+
+
+
+/* ==========================================
+   診断
+========================================== */
+
+function calculateDifficulty() {
+
+
+  const targetInput =
+    readRouteInput(
+      false
     );
 
-  font-size:
-    13px;
 
-}
+  if (
+    !validateMainInput(
+      targetInput
+    )
+  ) {
 
-
-
-/* ========================================
-   メイン
-======================================== */
-
-main {
-
-  width:
-    min(
-      92%,
-      760px
+    alert(
+      "診断するルートの必須項目を確認してください。"
     );
 
-  margin:
-    -32px auto
-    70px;
-
-}
-
-
-.card {
-
-  margin-bottom:
-    24px;
-
-  padding:
-    30px;
-
-  border-radius:
-    20px;
-
-  background:
-    white;
-
-  box-shadow:
-    0 12px 35px
-    rgba(
-      30,
-      50,
-      35,
-      .08
-    );
-
-}
-
-
-.input-card {
-
-  border-top:
-    5px solid
-    var(--forest);
-
-}
-
-
-.section-kicker {
-
-  margin-top:
-    0;
-
-  color:
-    #7f947f;
-
-}
-
-
-h2 {
-
-  margin-top:
-    0;
-
-}
-
-
-.description {
-
-  color:
-    var(--muted);
-
-  line-height:
-    1.8;
-
-}
-
-
-
-/* ========================================
-   入力
-======================================== */
-
-.form-grid {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap:
-    20px;
-
-}
-
-
-.form-group {
-
-  margin-bottom:
-    22px;
-
-}
-
-
-label {
-
-  display:
-    block;
-
-  margin-bottom:
-    8px;
-
-  font-weight:
-    bold;
-
-}
-
-
-.required {
-
-  margin-left:
-    4px;
-
-  padding:
-    2px 6px;
-
-  border-radius:
-    4px;
-
-  background:
-    var(--forest-light);
-
-  color:
-    var(--forest);
-
-  font-size:
-    10px;
-
-}
-
-
-.input-row {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    10px;
-
-}
-
-
-.input-row span {
-
-  flex:
-    none;
-
-  min-width:
-    30px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    13px;
-
-}
-
-
-.time-row {
-
-  display:
-    flex;
-
-  gap:
-    16px;
-
-}
-
-
-.time-row
-.input-row {
-
-  flex:
-    1;
-
-}
-
-
-input,
-select {
-
-  width:
-    100%;
-
-  min-height:
-    50px;
-
-  padding:
-    12px;
-
-  border:
-    1px solid
-    #ccd5cc;
-
-  border-radius:
-    11px;
-
-  background:
-    #fbfcfa;
-
-  color:
-    var(--text);
-
-  font-size:
-    16px;
-
-}
-
-
-input:focus,
-select:focus {
-
-  outline:
-    3px solid
-    rgba(
-      80,
-      120,
-      85,
-      .15
-    );
-
-  border-color:
-    #79947b;
-
-}
-
-
-.small-note {
-
-  color:
-    var(--muted);
-
-  font-size:
-    11px;
-
-  line-height:
-    1.7;
-
-}
-
-
-.center-note {
-  text-align: center;
-}
-
-
-
-/* ========================================
-   折りたたみ
-======================================== */
-
-.optional-panel,
-.baseline-panel,
-.baseline-tech-panel {
-
-  margin:
-    16px 0
-    24px;
-
-  padding:
-    0 18px;
-
-  border:
-    1px solid
-    var(--line);
-
-  border-radius:
-    14px;
-
-  background:
-    #f8faf7;
-
-}
-
-
-.optional-panel summary,
-.baseline-panel summary,
-.baseline-tech-panel summary {
-
-  padding:
-    18px 0;
-
-  font-weight:
-    bold;
-
-  cursor:
-    pointer;
-
-}
-
-
-.optional-panel summary span,
-.baseline-panel summary span,
-.baseline-tech-panel summary span {
-
-  margin-left:
-    6px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    11px;
-
-}
-
-
-.optional-help {
-
-  color:
-    var(--muted);
-
-  font-size:
-    12px;
-
-  line-height:
-    1.7;
-
-}
-
-
-.baseline-panel {
-
-  background:
-    #f5f8f3;
-
-}
-
-
-.baseline-intro {
-
-  margin-bottom:
-    22px;
-
-  padding:
-    16px;
-
-  border-radius:
-    12px;
-
-  background:
-    #eaf1e8;
-
-}
-
-
-.baseline-intro p {
-
-  margin:
-    6px 0 0;
-
-  color:
-    #617063;
-
-  font-size:
-    12px;
-
-  line-height:
-    1.7;
-
-}
-
-
-.baseline-tech-panel {
-
-  margin-bottom:
-    20px;
-
-  background:
-    white;
-
-}
-
-
-
-/* ========================================
-   保存欄
-======================================== */
-
-.save-baseline-box {
-
-  margin:
-    18px 0 22px;
-
-  padding:
-    16px;
-
-  border:
-    1px solid
-    var(--line);
-
-  border-radius:
-    13px;
-
-  background:
-    white;
-
-}
-
-
-.save-checkbox {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    10px;
-
-  cursor:
-    pointer;
-
-}
-
-
-.save-checkbox input {
-
-  width:
-    20px;
-
-  min-height:
-    auto;
-
-  height:
-    20px;
-
-  margin:
-    0;
-
-}
-
-
-.save-checkbox span {
-
-  font-size:
-    14px;
-
-}
-
-
-.secondary-button {
-
-  margin-top:
-    8px;
-
-  padding:
-    11px 14px;
-
-  border:
-    1px solid
-    #b7c3b8;
-
-  border-radius:
-    10px;
-
-  background:
-    white;
-
-  color:
-    var(--forest);
-
-  box-shadow:
-    none;
-
-  font-size:
-    13px;
-
-}
-
-
-.save-status {
-
-  min-height:
-    18px;
-
-  margin:
-    8px 0 0;
-
-  color:
-    var(--forest);
-
-  font-size:
-    11px;
-
-}
-
-
-
-/* ========================================
-   メインボタン
-======================================== */
-
-#calculateButton {
-
-  width:
-    100%;
-
-  padding:
-    17px;
-
-  border:
-    none;
-
-  border-radius:
-    13px;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--forest),
-      var(--forest-dark)
-    );
-
-  color:
-    white;
-
-  font-size:
-    18px;
-
-  font-weight:
-    bold;
-
-  cursor:
-    pointer;
-
-}
-
-
-
-/* ========================================
-   結果
-======================================== */
-
-.hidden {
-
-  display:
-    none !important;
-
-}
-
-
-.result-card {
-
-  border-top:
-    5px solid
-    var(--forest);
-
-  text-align:
-    center;
-
-}
-
-
-.result-label {
-
-  color:
-    #7e927e;
-
-}
-
-
-.result-title {
-
-  color:
-    var(--muted);
-
-  font-size:
-    14px;
-
-}
-
-
-.score-wrap {
-
-  display:
-    flex;
-
-  align-items:
-    baseline;
-
-  justify-content:
-    center;
-
-  gap:
-    8px;
-
-}
-
-
-.difficulty-number {
-
-  font-size:
-    80px;
-
-  font-weight:
-    900;
-
-  line-height:
-    1;
-
-}
-
-
-.score-base {
-
-  color:
-    var(--muted);
-
-  font-size:
-    12px;
-
-}
-
-
-.difficulty-class {
-
-  display:
-    inline-block;
-
-  margin:
-    18px 0;
-
-  padding:
-    8px 25px;
-
-  border:
-    1px solid
-    #bbc7bb;
-
-  border-radius:
-    100px;
-
-  font-size:
-    18px;
-
-  font-weight:
-    bold;
-
-}
-
-
-
-/* ========================================
-   星
-======================================== */
-
-.meter-grid {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap:
-    14px;
-
-}
-
-
-.level-box {
-
-  padding:
-    18px;
-
-  border-radius:
-    14px;
-
-  background:
-    var(--forest-light);
-
-}
-
-
-.level-box p {
-
-  margin:
-    0 0 8px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    13px;
-
-}
-
-
-.stars {
-
-  font-size:
-    25px;
-
-}
-
-
-
-/* ========================================
-   診断精度
-======================================== */
-
-.confidence-row {
-
-  display:
-    flex;
-
-  justify-content:
-    space-between;
-
-  margin-top:
-    15px;
-
-  padding:
-    15px 18px;
-
-  border:
-    1px solid
-    var(--line);
-
-  border-radius:
-    13px;
-
-}
-
-
-
-/* ========================================
-   平均勾配
-======================================== */
-
-.gradient-box {
-
-  margin-top:
-    14px;
-
-  padding:
-    16px 18px;
-
-  border:
-    1px solid
-    var(--line);
-
-  border-radius:
-    14px;
-
-  background:
-    #f7f8f4;
-
-  text-align:
-    left;
-
-}
-
-
-.gradient-row {
-
-  display:
-    flex;
-
-  justify-content:
-    space-between;
-
-  align-items:
-    center;
-
-}
-
-
-.gradient-row span {
-
-  color:
-    var(--muted);
-
-  font-size:
-    13px;
-
-}
-
-
-.gradient-row strong {
-
-  color:
-    var(--forest);
-
-  font-size:
-    20px;
-
-}
-
-
-.gradient-box p {
-
-  margin:
-    8px 0 0;
-
-  color:
-    var(--muted);
-
-  font-size:
-    11px;
-
-  line-height:
-    1.6;
-
-}
-
-
-
-/* ========================================
-   基準結果
-======================================== */
-
-.baseline-result-box {
-
-  margin-top:
-    20px;
-
-  padding:
-    18px;
-
-  border-radius:
-    14px;
-
-  background:
-    #eaf0e7;
-
-  text-align:
-    left;
-
-}
-
-
-.box-small-title {
-
-  margin:
-    0 0 7px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    11px;
-
-}
-
-
-.baseline-result-box p:last-child {
-
-  margin-bottom:
-    0;
-
-  color:
-    var(--muted);
-
-  font-size:
-    12px;
-
-  line-height:
-    1.7;
-
-}
-
-
-
-/* ========================================
-   比較
-======================================== */
-
-.comparison-box {
-
-  margin-top:
-    20px;
-
-  padding:
-    20px;
-
-  border:
-    1px solid
-    var(--line);
-
-  border-radius:
-    15px;
-
-  text-align:
-    left;
-
-}
-
-
-.comparison-box h3 {
-
-  margin-top:
-    0;
-
-}
-
-
-.comparison-item {
-
-  display:
-    flex;
-
-  justify-content:
-    space-between;
-
-  gap:
-    15px;
-
-  padding:
-    11px 0;
-
-  border-bottom:
-    1px solid
-    #e7ebe6;
-
-}
-
-
-.comparison-item:last-child {
-
-  border-bottom:
-    none;
-
-}
-
-
-
-/* ========================================
-   警告
-======================================== */
-
-.warning-box {
-
-  margin-top:
-    20px;
-
-  padding:
-    18px;
-
-  border:
-    1px solid
-    #c8c2ab;
-
-  border-radius:
-    14px;
-
-  background:
-    #f8f5e9;
-
-  text-align:
-    left;
-
-  line-height:
-    1.7;
-
-}
-
-
-.warning-box p {
-
-  margin-bottom:
-    0;
-
-}
-
-
-
-/* ========================================
-   説明
-======================================== */
-
-.about-card {
-
-  line-height:
-    1.8;
-
-}
-
-
-.about-card p {
-
-  color:
-    #5f685f;
-
-}
-
-
-
-/* ========================================
-   フッター
-======================================== */
-
-footer {
-
-  padding:
-    30px 20px;
-
-  background:
-    #213527;
-
-  color:
-    #dfe6df;
-
-  text-align:
-    center;
-
-  font-size:
-    12px;
-
-}
-
-
-
-/* ========================================
-   スマホ
-======================================== */
-
-@media
-(max-width: 640px) {
-
-
-  .card {
-
-    padding:
-      23px 18px;
+    return;
 
   }
 
 
-  .form-grid {
 
-    grid-template-columns:
-      1fr;
+  const targetResult =
+    calculateStandardScore(
+      targetInput
+    );
 
-    gap:
+
+
+  const baselineMountainName =
+    document.getElementById(
+      "baselineMountainName"
+    ).value.trim();
+
+
+
+  const baselineRouteName =
+    document.getElementById(
+      "baselineRouteName"
+    ).value.trim();
+
+
+
+  const baselineInput =
+    readRouteInput(
+      true
+    );
+
+
+
+  const customBaselineUsed =
+    isCustomBaselineUsed();
+
+
+
+  let baselineRawScore =
+    100;
+
+
+  let baselineRoundedScore =
+    100;
+
+
+  let baselineDisplayName =
+    "富士山・富士宮ルート";
+
+
+
+  /* ==========================================
+     任意基準あり
+  ========================================== */
+
+  if (
+    customBaselineUsed
+  ) {
+
+
+    if (
+      baselineMountainName === ""
+    ) {
+
+      alert(
+        "比較基準を設定する場合は、基準にする山の名前を入力してください。"
+      );
+
+      return;
+
+    }
+
+
+
+    if (
+      !validateMainInput(
+        baselineInput
+      )
+    ) {
+
+      alert(
+        "比較基準を設定する場合は、基準ルートの基本項目をすべて入力してください。"
+      );
+
+      return;
+
+    }
+
+
+
+    const baselineResult =
+      calculateStandardScore(
+        baselineInput
+      );
+
+
+
+    baselineRawScore =
+      baselineResult.rawScore;
+
+
+    baselineRoundedScore =
+      baselineResult.score;
+
+
+
+    if (
+      baselineRouteName !== ""
+    ) {
+
+      baselineDisplayName =
+        baselineMountainName
+        +
+        "・"
+        +
+        baselineRouteName;
+
+    }
+
+    else {
+
+      baselineDisplayName =
+        baselineMountainName;
+
+    }
+
+
+
+    if (
+      baselineRawScore <= 0
+    ) {
+
+      alert(
+        "基準ルートの難易度を正しく算出できませんでした。"
+      );
+
+      return;
+
+    }
+
+
+
+    if (
+      saveBaselineCheckbox.checked
+    ) {
+
+      saveBaseline();
+
+    }
+
+  }
+
+
+
+  /* ==========================================
+     表示指数
+  ========================================== */
+
+  const displayedScore =
+
+    Math.round(
+
+      (
+        targetResult.rawScore
+        /
+        baselineRawScore
+      )
+
+      *
+
+      100
+
+    );
+
+
+
+  displayResult({
+
+    standardScore:
+      targetResult.score,
+
+    displayedScore:
+      displayedScore,
+
+    staminaScore:
+      targetResult.staminaScore,
+
+    averageGradient:
+      targetResult.averageGradient,
+
+    knownOptionalCount:
+      targetResult.knownOptionalCount,
+
+    technicalScore:
+      targetResult.technicalScore,
+
+    riskScore:
+      targetResult.riskScore,
+
+    terrainScore:
+      targetResult.terrainScore,
+
+    baselineRawScore:
+      baselineRawScore,
+
+    baselineScore:
+      baselineRoundedScore,
+
+    baselineName:
+      baselineDisplayName,
+
+    customBaselineUsed:
+      customBaselineUsed
+
+  });
+
+}
+
+
+
+/* ==========================================
+   入力値取得
+========================================== */
+
+function readRouteInput(
+  baseline
+) {
+
+
+  const prefix =
+    baseline
+      ?
+      "baseline"
+      :
+      "";
+
+
+
+  function makeId(
+    name
+  ) {
+
+    if (
+      prefix === ""
+    ) {
+
+      return name;
+
+    }
+
+
+    return (
+      prefix
+      +
+      name.charAt(0).toUpperCase()
+      +
+      name.slice(1)
+    );
+
+  }
+
+
+
+  const distanceRaw =
+    document.getElementById(
+      makeId(
+        "distance"
+      )
+    ).value;
+
+
+
+  const elevationRaw =
+    document.getElementById(
+      makeId(
+        "elevation"
+      )
+    ).value;
+
+
+
+  const hoursRaw =
+    document.getElementById(
+      makeId(
+        "hours"
+      )
+    ).value;
+
+
+
+  const minutesRaw =
+    document.getElementById(
+      makeId(
+        "minutes"
+      )
+    ).value;
+
+
+
+  const altitudeRaw =
+    document.getElementById(
+      makeId(
+        "altitude"
+      )
+    ).value;
+
+
+
+  return {
+
+
+    distanceRaw:
+      distanceRaw,
+
+
+    elevationRaw:
+      elevationRaw,
+
+
+    hoursRaw:
+      hoursRaw,
+
+
+    minutesRaw:
+      minutesRaw,
+
+
+    altitudeRaw:
+      altitudeRaw,
+
+
+    distance:
+      Number(
+        distanceRaw
+      ),
+
+
+    elevation:
+      Number(
+        elevationRaw
+      ),
+
+
+    hours:
+      hoursRaw === ""
+        ?
+        0
+        :
+        Number(
+          hoursRaw
+        ),
+
+
+    minutes:
+      minutesRaw === ""
+        ?
+        0
+        :
+        Number(
+          minutesRaw
+        ),
+
+
+    altitude:
+      Number(
+        altitudeRaw
+      ),
+
+
+    routeType:
+      document.getElementById(
+        makeId(
+          "routeType"
+        )
+      ).value,
+
+
+    technical:
+      document.getElementById(
+        makeId(
+          "technical"
+        )
+      ).value,
+
+
+    risk:
+      document.getElementById(
+        makeId(
+          "risk"
+        )
+      ).value,
+
+
+    terrain:
+      document.getElementById(
+        makeId(
+          "terrain"
+        )
+      ).value
+
+  };
+
+}
+
+
+
+/* ==========================================
+   基準入力があるか判定
+========================================== */
+
+function isCustomBaselineUsed() {
+
+
+  const ids = [
+
+    "baselineMountainName",
+
+    "baselineRouteName",
+
+    "baselineDistance",
+
+    "baselineElevation",
+
+    "baselineHours",
+
+    "baselineMinutes",
+
+    "baselineAltitude",
+
+    "baselineTechnical",
+
+    "baselineRisk",
+
+    "baselineTerrain"
+
+  ];
+
+
+
+  return ids.some(
+
+    function (
+      id
+    ) {
+
+      return (
+
+        document.getElementById(
+          id
+        ).value !== ""
+
+      );
+
+    }
+
+  );
+
+}
+
+
+
+/* ==========================================
+   Ver.0.3計算式
+========================================== */
+
+function calculateStandardScore(
+  input
+) {
+
+
+  const courseTime =
+
+    input.hours
+
+    +
+
+    input.minutes / 60;
+
+
+
+  /* ① 体力点 */
+
+  const R =
+
+    0.25 *
+
+    (
+      input.distance /
+      8.1
+    )
+
+    +
+
+    0.40 *
+
+    (
+      input.elevation /
+      1389
+    )
+
+    +
+
+    0.35 *
+
+    (
+      courseTime /
+      7.95
+    );
+
+
+
+  const staminaScore =
+
+    49 *
+
+    Math.pow(
+      R,
+      1.1
+    );
+
+
+
+  /* ② 高所補正 */
+
+  let baseAltitudeScore =
+    0;
+
+
+
+  if (
+    input.altitude >= 3776
+  ) {
+
+    baseAltitudeScore =
+      35;
+
+  }
+
+
+  else if (
+    input.altitude >= 2000
+  ) {
+
+    baseAltitudeScore =
+
+      35 *
+
+      Math.pow(
+
+        (
+          input.altitude
+          -
+          2000
+        )
+
+        /
+
+        1776,
+
+        2
+
+      );
+
+  }
+
+
+
+  /* ③ CTによる高所軽減 */
+
+  let altitudeTimeFactor =
+    1;
+
+
+
+  if (
+    courseTime < 2
+  ) {
+
+    altitudeTimeFactor =
+      0.30;
+
+  }
+
+
+  else if (
+    courseTime < 3
+  ) {
+
+    altitudeTimeFactor =
+      0.50;
+
+  }
+
+
+  else if (
+    courseTime < 5
+  ) {
+
+    altitudeTimeFactor =
+      0.75;
+
+  }
+
+
+
+  const altitudeScore =
+
+    baseAltitudeScore
+
+    *
+
+    altitudeTimeFactor;
+
+
+
+  /* ④ 平均勾配補正 */
+
+  let averageGradient =
+    null;
+
+
+  let slopeBonus =
+    0;
+
+
+
+  if (
+    input.routeType ===
+    "round"
+  ) {
+
+
+    const ascentDistanceMeters =
+
+      (
+        input.distance
+        /
+        2
+      )
+
+      *
+
+      1000;
+
+
+
+    averageGradient =
+
+      (
+        input.elevation
+        /
+        ascentDistanceMeters
+      )
+
+      *
+
+      100;
+
+
+
+    if (
+      averageGradient >= 30
+    ) {
+
+      slopeBonus =
+        6;
+
+    }
+
+
+    else if (
+      averageGradient >= 25
+    ) {
+
+      slopeBonus =
+        4;
+
+    }
+
+
+    else if (
+      averageGradient >= 20
+    ) {
+
+      slopeBonus =
+        2;
+
+    }
+
+
+    else if (
+      averageGradient >= 15
+    ) {
+
+      slopeBonus =
+        1;
+
+    }
+
+  }
+
+
+
+  /* ⑤ 技術情報 */
+
+  const technicalKnown =
+    input.technical !== "";
+
+
+  const riskKnown =
+    input.risk !== "";
+
+
+  const terrainKnown =
+    input.terrain !== "";
+
+
+
+  const technicalScore =
+
+    technicalKnown
+      ?
+      Number(
+        input.technical
+      )
+      :
       0;
 
+
+
+  const riskScore =
+
+    riskKnown
+      ?
+      Number(
+        input.risk
+      )
+      :
+      0;
+
+
+
+  const terrainScore =
+
+    terrainKnown
+      ?
+      Number(
+        input.terrain
+      )
+      :
+      0;
+
+
+
+  const optionalBonus =
+
+    technicalScore
+
+    +
+
+    riskScore
+
+    +
+
+    terrainScore;
+
+
+
+  const knownOptionalCount =
+
+    Number(
+      technicalKnown
+    )
+
+    +
+
+    Number(
+      riskKnown
+    )
+
+    +
+
+    Number(
+      terrainKnown
+    );
+
+
+
+  const rawScore =
+
+    staminaScore
+
+    +
+
+    altitudeScore
+
+    +
+
+    slopeBonus
+
+    +
+
+    optionalBonus;
+
+
+
+  const score =
+    Math.round(
+      rawScore
+    );
+
+
+
+  return {
+
+
+    rawScore:
+      rawScore,
+
+
+    score:
+      score,
+
+
+    staminaScore:
+      staminaScore,
+
+
+    altitudeScore:
+      altitudeScore,
+
+
+    slopeBonus:
+      slopeBonus,
+
+
+    averageGradient:
+      averageGradient,
+
+
+    technicalScore:
+      technicalScore,
+
+
+    riskScore:
+      riskScore,
+
+
+    terrainScore:
+      terrainScore,
+
+
+    knownOptionalCount:
+      knownOptionalCount
+
+  };
+
+}
+
+
+
+/* ==========================================
+   入力チェック
+========================================== */
+
+function validateMainInput(
+  input
+) {
+
+
+  if (
+
+    input.distanceRaw === ""
+
+    ||
+
+    input.elevationRaw === ""
+
+    ||
+
+    input.altitudeRaw === ""
+
+  ) {
+
+    return false;
+
   }
 
 
-  .meter-grid {
 
-    grid-template-columns:
-      1fr;
+  if (
+
+    input.hoursRaw === ""
+
+    &&
+
+    input.minutesRaw === ""
+
+  ) {
+
+    return false;
+
+  }
+
+
+
+  if (
+
+    !Number.isFinite(
+      input.distance
+    )
+
+    ||
+
+    input.distance <= 0
+
+    ||
+
+    !Number.isFinite(
+      input.elevation
+    )
+
+    ||
+
+    input.elevation < 0
+
+    ||
+
+    !Number.isFinite(
+      input.hours
+    )
+
+    ||
+
+    input.hours < 0
+
+    ||
+
+    !Number.isFinite(
+      input.minutes
+    )
+
+    ||
+
+    input.minutes < 0
+
+    ||
+
+    input.minutes >= 60
+
+    ||
+
+    !Number.isFinite(
+      input.altitude
+    )
+
+    ||
+
+    input.altitude <= 0
+
+  ) {
+
+    return false;
 
   }
 
 
-  .difficulty-number {
 
-    font-size:
-      68px;
+  const courseTime =
+
+    input.hours
+
+    +
+
+    input.minutes / 60;
+
+
+
+  return (
+    courseTime > 0
+  );
+
+}
+
+
+
+/* ==========================================
+   結果表示
+========================================== */
+
+function displayResult(
+  data
+) {
+
+
+  const result =
+    document.getElementById(
+      "result"
+    );
+
+
+  result.classList.remove(
+    "hidden"
+  );
+
+
+
+  document.getElementById(
+    "difficultyNumber"
+  ).textContent =
+    data.displayedScore;
+
+
+
+  document.getElementById(
+    "scoreBaseLabel"
+  ).textContent =
+
+    "/ "
+
+    +
+
+    getShortName(
+      data.baselineName
+    )
+
+    +
+
+    " 100";
+
+
+
+  let difficultyClass =
+    "初級";
+
+
+
+  if (
+    data.standardScore >= 81
+  ) {
+
+    difficultyClass =
+      "上級";
 
   }
 
 
-  .time-row {
+  else if (
+    data.standardScore >= 36
+  ) {
 
-    gap:
-      9px;
+    difficultyClass =
+      "中級";
 
   }
+
+
+
+  document.getElementById(
+    "difficultyClass"
+  ).textContent =
+    difficultyClass;
+
+
+
+  document.getElementById(
+    "staminaStars"
+  ).textContent =
+
+    getStaminaStars(
+      data.staminaScore
+    );
+
+
+
+  const technicalStars =
+    document.getElementById(
+      "technicalStars"
+    );
+
+
+
+  if (
+    data.knownOptionalCount === 0
+  ) {
+
+    technicalStars.textContent =
+      "未判定";
+
+  }
+
+
+  else {
+
+    technicalStars.textContent =
+
+      getTechnicalStars(
+
+        data.technicalScore
+
+        +
+
+        data.riskScore
+
+        +
+
+        data.terrainScore
+
+      );
+
+  }
+
+
+
+  document.getElementById(
+    "confidence"
+  ).textContent =
+
+    getConfidence(
+      data.knownOptionalCount
+    );
+
+
+
+  const gradientBox =
+    document.getElementById(
+      "gradientBox"
+    );
+
+
+
+  if (
+    data.averageGradient !== null
+  ) {
+
+    document.getElementById(
+      "averageGradient"
+    ).textContent =
+
+      data.averageGradient.toFixed(
+        1
+      )
+
+      +
+
+      "%";
+
+
+    gradientBox.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  else {
+
+    gradientBox.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+
+  document.getElementById(
+    "baselineResultTitle"
+  ).textContent =
+
+    data.baselineName
+
+    +
+
+    " ＝ 100";
+
+
+
+  const baselineResultText =
+    document.getElementById(
+      "baselineResultText"
+    );
+
+
+
+  if (
+    data.customBaselineUsed
+  ) {
+
+    baselineResultText.textContent =
+
+      "入力された基準ルートの標準指数は"
+
+      +
+
+      data.baselineScore
+
+      +
+
+      "です。このルートを100として難易度指数を換算しています。";
+
+  }
+
+
+  else {
+
+    baselineResultText.textContent =
+
+      "比較基準が入力されていないため、富士山・富士宮ルートを100として表示しています。";
+
+  }
+
+
+
+  const warning =
+    document.getElementById(
+      "missingTechWarning"
+    );
+
+
+
+  if (
+    data.knownOptionalCount < 3
+  ) {
+
+    warning.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  else {
+
+    warning.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+
+  showClosestMountains(
+
+    data.standardScore,
+
+    data.baselineRawScore
+
+  );
+
+
+
+  result.scrollIntoView({
+
+    behavior:
+      "smooth",
+
+    block:
+      "start"
+
+  });
+
+}
+
+
+
+/* ==========================================
+   近い難易度
+========================================== */
+
+function showClosestMountains(
+
+  standardScore,
+
+  baselineRawScore
+
+) {
+
+
+  const sorted =
+
+    [...referenceMountains]
+
+    .sort(
+
+      function (
+        a,
+        b
+      ) {
+
+        return (
+
+          Math.abs(
+            a.score
+            -
+            standardScore
+          )
+
+          -
+
+          Math.abs(
+            b.score
+            -
+            standardScore
+          )
+
+        );
+
+      }
+
+    )
+
+    .slice(
+      0,
+      3
+    );
+
+
+
+  const container =
+    document.getElementById(
+      "comparisonList"
+    );
+
+
+  container.innerHTML =
+    "";
+
+
+
+  sorted.forEach(
+
+    function (
+      mountain
+    ) {
+
+
+      const convertedScore =
+
+        Math.round(
+
+          (
+            mountain.score
+            /
+            baselineRawScore
+          )
+
+          *
+
+          100
+
+        );
+
+
+
+      const item =
+        document.createElement(
+          "div"
+        );
+
+
+      item.className =
+        "comparison-item";
+
+
+
+      item.innerHTML =
+
+        "<span>"
+
+        +
+
+        mountain.name
+
+        +
+
+        "</span>"
+
+        +
+
+        "<strong>"
+
+        +
+
+        convertedScore
+
+        +
+
+        "</strong>";
+
+
+
+      container.appendChild(
+        item
+      );
+
+    }
+
+  );
+
+}
+
+
+
+/* ==========================================
+   星・精度
+========================================== */
+
+function getStaminaStars(
+  staminaScore
+) {
+
+
+  let level =
+    1;
+
+
+  if (
+    staminaScore >= 60
+  ) {
+
+    level =
+      5;
+
+  }
+
+
+  else if (
+    staminaScore >= 45
+  ) {
+
+    level =
+      4;
+
+  }
+
+
+  else if (
+    staminaScore >= 30
+  ) {
+
+    level =
+      3;
+
+  }
+
+
+  else if (
+    staminaScore >= 18
+  ) {
+
+    level =
+      2;
+
+  }
+
+
+
+  return (
+
+    "★".repeat(
+      level
+    )
+
+    +
+
+    "☆".repeat(
+      5 - level
+    )
+
+  );
+
+}
+
+
+
+function getTechnicalStars(
+  score
+) {
+
+
+  let level =
+    1;
+
+
+  if (
+    score > 8
+  ) {
+
+    level =
+      5;
+
+  }
+
+
+  else if (
+    score > 6
+  ) {
+
+    level =
+      4;
+
+  }
+
+
+  else if (
+    score > 3.5
+  ) {
+
+    level =
+      3;
+
+  }
+
+
+  else if (
+    score > 1.5
+  ) {
+
+    level =
+      2;
+
+  }
+
+
+
+  return (
+
+    "★".repeat(
+      level
+    )
+
+    +
+
+    "☆".repeat(
+      5 - level
+    )
+
+  );
+
+}
+
+
+
+function getConfidence(
+  count
+) {
+
+
+  if (
+    count === 3
+  ) {
+
+    return "高";
+
+  }
+
+
+  if (
+    count >= 1
+  ) {
+
+    return "標準";
+
+  }
+
+
+  return "基本";
+
+}
+
+
+
+function getShortName(
+  name
+) {
+
+
+  if (
+    name ===
+    "富士山・富士宮ルート"
+  ) {
+
+    return "富士宮";
+
+  }
+
+
+  if (
+    name.length > 12
+  ) {
+
+    return (
+
+      name.substring(
+        0,
+        12
+      )
+
+      +
+
+      "…"
+
+    );
+
+  }
+
+
+  return name;
+
+}
+
+
+
+/* ==========================================
+   保存
+========================================== */
+
+function saveBaseline() {
+
+
+  const savedData = {
+
+
+    mountainName:
+      document.getElementById(
+        "baselineMountainName"
+      ).value,
+
+
+    routeName:
+      document.getElementById(
+        "baselineRouteName"
+      ).value,
+
+
+    distance:
+      document.getElementById(
+        "baselineDistance"
+      ).value,
+
+
+    elevation:
+      document.getElementById(
+        "baselineElevation"
+      ).value,
+
+
+    hours:
+      document.getElementById(
+        "baselineHours"
+      ).value,
+
+
+    minutes:
+      document.getElementById(
+        "baselineMinutes"
+      ).value,
+
+
+    altitude:
+      document.getElementById(
+        "baselineAltitude"
+      ).value,
+
+
+    routeType:
+      document.getElementById(
+        "baselineRouteType"
+      ).value,
+
+
+    technical:
+      document.getElementById(
+        "baselineTechnical"
+      ).value,
+
+
+    risk:
+      document.getElementById(
+        "baselineRisk"
+      ).value,
+
+
+    terrain:
+      document.getElementById(
+        "baselineTerrain"
+      ).value
+
+  };
+
+
+
+  const success =
+
+    safeStorageSet(
+
+      BASELINE_STORAGE_KEY,
+
+      JSON.stringify(
+        savedData
+      )
+
+    );
+
+
+
+  if (
+    success
+  ) {
+
+    setSaveStatus(
+      "基準ルートをこの端末に保存しました。"
+    );
+
+  }
+
+
+  else {
+
+    setSaveStatus(
+      "この開き方では保存機能を利用できない可能性があります。診断自体は利用できます。"
+    );
+
+  }
+
+}
+
+
+
+/* ==========================================
+   復元
+========================================== */
+
+function restoreSavedBaseline() {
+
+
+  const savedText =
+    safeStorageGet(
+      BASELINE_STORAGE_KEY
+    );
+
+
+
+  if (
+    !savedText
+  ) {
+
+    return;
+
+  }
+
+
+
+  try {
+
+
+    const savedData =
+      JSON.parse(
+        savedText
+      );
+
+
+
+    document.getElementById(
+      "baselineMountainName"
+    ).value =
+      savedData.mountainName || "";
+
+
+
+    document.getElementById(
+      "baselineRouteName"
+    ).value =
+      savedData.routeName || "";
+
+
+
+    document.getElementById(
+      "baselineDistance"
+    ).value =
+      savedData.distance || "";
+
+
+
+    document.getElementById(
+      "baselineElevation"
+    ).value =
+      savedData.elevation || "";
+
+
+
+    document.getElementById(
+      "baselineHours"
+    ).value =
+      savedData.hours || "";
+
+
+
+    document.getElementById(
+      "baselineMinutes"
+    ).value =
+      savedData.minutes || "";
+
+
+
+    document.getElementById(
+      "baselineAltitude"
+    ).value =
+      savedData.altitude || "";
+
+
+
+    document.getElementById(
+      "baselineRouteType"
+    ).value =
+      savedData.routeType || "round";
+
+
+
+    document.getElementById(
+      "baselineTechnical"
+    ).value =
+      savedData.technical ?? "";
+
+
+
+    document.getElementById(
+      "baselineRisk"
+    ).value =
+      savedData.risk ?? "";
+
+
+
+    document.getElementById(
+      "baselineTerrain"
+    ).value =
+      savedData.terrain ?? "";
+
+
+
+    saveBaselineCheckbox.checked =
+      true;
+
+
+
+    document.getElementById(
+      "baselinePanel"
+    ).open =
+      true;
+
+
+
+    setSaveStatus(
+      "保存していた基準ルートを読み込みました。"
+    );
+
+
+  }
+
+
+  catch (
+    error
+  ) {
+
+    safeStorageRemove(
+      BASELINE_STORAGE_KEY
+    );
+
+  }
+
+}
+
+
+
+/* ==========================================
+   保存削除
+========================================== */
+
+function clearSavedBaseline() {
+
+
+  safeStorageRemove(
+    BASELINE_STORAGE_KEY
+  );
+
+
+
+  saveBaselineCheckbox.checked =
+    false;
+
+
+
+  clearBaselineInputs();
+
+
+
+  setSaveStatus(
+    "保存した基準ルートを削除しました。"
+  );
+
+}
+
+
+
+/* ==========================================
+   基準欄クリア
+========================================== */
+
+function clearBaselineInputs() {
+
+
+  const ids = [
+
+    "baselineMountainName",
+
+    "baselineRouteName",
+
+    "baselineDistance",
+
+    "baselineElevation",
+
+    "baselineHours",
+
+    "baselineMinutes",
+
+    "baselineAltitude"
+
+  ];
+
+
+
+  ids.forEach(
+
+    function (
+      id
+    ) {
+
+      document.getElementById(
+        id
+      ).value =
+        "";
+
+    }
+
+  );
+
+
+
+  document.getElementById(
+    "baselineRouteType"
+  ).value =
+    "round";
+
+
+
+  document.getElementById(
+    "baselineTechnical"
+  ).value =
+    "";
+
+
+
+  document.getElementById(
+    "baselineRisk"
+  ).value =
+    "";
+
+
+
+  document.getElementById(
+    "baselineTerrain"
+  ).value =
+    "";
+
+}
+
+
+
+/* ==========================================
+   保存メッセージ
+========================================== */
+
+function setSaveStatus(
+  text
+) {
+
+
+  document.getElementById(
+    "saveStatus"
+  ).textContent =
+    text;
 
 }
