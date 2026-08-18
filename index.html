@@ -1,189 +1,1056 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登山難易度チェッカー｜距離・獲得標高から登山難易度を簡単診断</title>
-  <meta name="description" content="距離、獲得標高、コースタイム、最高標高などから登山難易度を数値化。富士山・富士宮ルートを100とした難易度指数を簡単に診断できます。">
-  <link rel="stylesheet" href="style.css">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    登山難易度チェッカー
+  </title>
+
+  <meta
+    name="description"
+    content="距離・獲得標高・コースタイム・最高標高などから登山難易度を数値化。富士山・富士宮ルートを標準基準100として比較できます。"
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
 </head>
+
+
 <body>
-  <header class="hero">
-    <div class="hero-inner">
-      <p class="eyebrow">MOUNTAIN DIFFICULTY CHECKER</p>
-      <h1>登山難易度チェッカー</h1>
-      <p class="lead">
-        距離・獲得標高・コースタイム・登山道などから、登山難易度をかんたんに数値化。
-      </p>
-      <div class="hero-badge">富士山・富士宮ルート ＝ 100</div>
-    </div>
-  </header>
 
-  <main>
-    <section class="card">
-      <h2>かんたん診断</h2>
-      <p class="section-description">
-        基本5項目は必須です。技術情報は、分かる場合だけ入力してください。
-      </p>
 
-      <div class="form-group">
-        <label for="distance">総距離 <span class="required">必須</span></label>
-        <div class="input-row">
-          <input type="number" id="distance" min="0.1" step="0.1" placeholder="例：10.4">
-          <span>km</span>
-        </div>
-      </div>
+<header class="hero">
 
-      <div class="form-group">
-        <label for="elevation">累積上昇標高差（獲得標高） <span class="required">必須</span></label>
-        <div class="input-row">
-          <input type="number" id="elevation" min="0" step="1" placeholder="例：1132">
-          <span>m</span>
-        </div>
-      </div>
+  <div class="hero-inner">
 
-      <div class="form-group">
-        <label>標準コースタイム <span class="required">必須</span></label>
-        <div class="time-row">
-          <div class="input-row">
-            <input type="number" id="hours" min="0" step="1" placeholder="6">
-            <span>時間</span>
-          </div>
-          <div class="input-row">
-            <input type="number" id="minutes" min="0" max="59" step="1" placeholder="25">
-            <span>分</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="altitude">最高標高 <span class="required">必須</span></label>
-        <div class="input-row">
-          <input type="number" id="altitude" min="0" step="1" placeholder="例：2077">
-          <span>m</span>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="routeType">行程タイプ <span class="required">必須</span></label>
-        <select id="routeType">
-          <option value="round">往復</option>
-          <option value="circuit">周回</option>
-          <option value="traverse">縦走</option>
-        </select>
-        <p class="small-note">※初期版では行程タイプは記録のみで、難易度補正にはまだ使用していません。</p>
-      </div>
-
-      <details class="optional-panel">
-        <summary>技術情報も入力する（任意）</summary>
-
-        <div class="form-group optional-first">
-          <label for="technical">技術的難所</label>
-          <select id="technical">
-            <option value="">不明・入力しない</option>
-            <option value="0">なし</option>
-            <option value="1.5">軽度</option>
-            <option value="3">あり</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="risk">滑落・転落危険箇所</label>
-          <select id="risk">
-            <option value="">不明・入力しない</option>
-            <option value="0">なし</option>
-            <option value="1.5">軽度</option>
-            <option value="3">あり</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="terrain">足場</label>
-          <select id="terrain">
-            <option value="">不明・入力しない</option>
-            <option value="0">歩きやすい</option>
-            <option value="2">やや歩きにくい</option>
-            <option value="4">歩きにくい</option>
-          </select>
-        </div>
-      </details>
-
-      <button id="calculateButton"><span>難易度を診断する</span><span class="button-arrow">→</span></button>
-    </section>
-
-    <section id="result" class="card result-card hidden">
-      <p class="result-eyebrow">DIFFICULTY INDEX</p>
-      <p class="result-label">このルートの難易度指数</p>
-      <div id="difficultyNumber" class="difficulty-number">0</div>
-      <div id="difficultyClass" class="difficulty-class">初級</div>
-
-      <div class="meter-grid">
-        <div class="level-box">
-          <p>体力レベル</p>
-          <div id="staminaStars" class="stars">☆☆☆☆☆</div>
-        </div>
-        <div class="level-box">
-          <p>技術レベル</p>
-          <div id="technicalStars" class="stars">未判定</div>
-        </div>
-      </div>
-
-      <div class="detail-box">
-        <div><span>基本指数</span><strong id="baseScore">0</strong></div>
-        <div><span>技術等の補正</span><strong id="optionalBonus">+0</strong></div>
-        <div><span>診断精度</span><strong id="confidence">基本</strong></div>
-      </div>
-
-      <div class="comparison-box">
-        <h3>近い難易度のルート</h3>
-        <div id="comparisonList"></div>
-      </div>
-
-      <div class="fuji-box">
-        <strong>富士山・富士宮ルート ＝ 100</strong>
-        <p id="fujiComparison"></p>
-      </div>
-
-      <div id="missingTechWarning" class="warning-box hidden">
-        <strong>技術情報が未入力です</strong>
-        <p>
-          この指数は主に体力面から算出しています。指数が低くても安全なルートとは限りません。
-          鎖場・ロープ場・岩場・滑落危険箇所など、最新のルート情報を必ず確認してください。
-        </p>
-      </div>
-
-      <div class="calculation-info">
-        <h3>この指数について</h3>
-        <p>
-          総距離・獲得標高・標準コースタイムを中心に、体力的な負荷を重視して算出しています。
-        </p>
-        <p>
-          最高標高が2000m以上の場合は高所補正を加えます。
-          ただし標準コースタイムが短いルートでは、高所補正を軽減します。
-        </p>
-      </div>
-    </section>
-
-    <section class="card explanation">
-      <h2>難易度の目安</h2>
-      <div class="difficulty-table">
-        <div><strong>初級</strong><span>0以上 ～ 36未満</span></div>
-        <div><strong>中級</strong><span>36以上 ～ 81未満</span></div>
-        <div><strong>上級</strong><span>81以上</span></div>
-      </div>
-      <p>
-        難易度指数100は富士山・富士宮ルートを基準としています。100が上限ではありません。
-      </p>
-    </section>
-  </main>
-
-  <footer>
-    <p>
-      ※本診断は無雪期・一般的な天候条件を想定した目安です。
-      実際の難易度は天候、路面状況、体調、装備、経験などによって変化します。
+    <p class="eyebrow">
+      MOUNTAIN DIFFICULTY CHECKER
     </p>
-  </footer>
 
-  <script src="script.js"></script>
+    <h1>
+      登山難易度チェッカー
+    </h1>
+
+    <p class="lead">
+      距離・獲得標高・コースタイム・登山道などから、
+      登山難易度をかんたんに数値化。
+    </p>
+
+    <div class="hero-badge">
+      標準基準：富士山・富士宮ルート ＝ 100
+    </div>
+
+  </div>
+
+</header>
+
+
+
+<main>
+
+
+<!-- ========================================
+     診断するルート
+======================================== -->
+
+<section class="card input-card">
+
+  <p class="section-kicker">
+    QUICK CHECK
+  </p>
+
+  <h2>
+    診断するルート
+  </h2>
+
+  <p class="description">
+    基本5項目を入力してください。
+    技術情報は分かる場合のみ入力できます。
+  </p>
+
+
+
+  <div class="form-grid">
+
+
+    <div class="form-group">
+
+      <label for="distance">
+        総距離
+        <span class="required">
+          必須
+        </span>
+      </label>
+
+      <div class="input-row">
+
+        <input
+          type="number"
+          id="distance"
+          min="0.1"
+          step="0.1"
+          placeholder="例：10.4"
+        >
+
+        <span>
+          km
+        </span>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="form-group">
+
+      <label for="elevation">
+        獲得標高
+        <span class="required">
+          必須
+        </span>
+      </label>
+
+      <div class="input-row">
+
+        <input
+          type="number"
+          id="elevation"
+          min="0"
+          step="1"
+          placeholder="例：1132"
+        >
+
+        <span>
+          m
+        </span>
+
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+
+  <div class="form-group">
+
+    <label>
+      標準コースタイム
+      <span class="required">
+        必須
+      </span>
+    </label>
+
+    <div class="time-row">
+
+
+      <div class="input-row">
+
+        <input
+          type="number"
+          id="hours"
+          min="0"
+          step="1"
+          placeholder="6"
+        >
+
+        <span>
+          時間
+        </span>
+
+      </div>
+
+
+
+      <div class="input-row">
+
+        <input
+          type="number"
+          id="minutes"
+          min="0"
+          max="59"
+          step="1"
+          placeholder="25"
+        >
+
+        <span>
+          分
+        </span>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+
+
+  <div class="form-grid">
+
+
+    <div class="form-group">
+
+      <label for="altitude">
+        最高標高
+        <span class="required">
+          必須
+        </span>
+      </label>
+
+      <div class="input-row">
+
+        <input
+          type="number"
+          id="altitude"
+          min="1"
+          step="1"
+          placeholder="例：2077"
+        >
+
+        <span>
+          m
+        </span>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="form-group">
+
+      <label for="routeType">
+        行程タイプ
+        <span class="required">
+          必須
+        </span>
+      </label>
+
+      <select id="routeType">
+
+        <option value="round">
+          往復
+        </option>
+
+        <option value="circuit">
+          周回
+        </option>
+
+        <option value="traverse">
+          縦走
+        </option>
+
+      </select>
+
+    </div>
+
+
+  </div>
+
+
+  <p class="small-note">
+    ※平均勾配補正は、現在は往復ルートのみ適用しています。
+  </p>
+
+
+
+  <!-- ========================================
+       診断するルートの技術情報
+  ======================================== -->
+
+  <details class="optional-panel">
+
+    <summary>
+      技術情報を入力する
+      <span>
+        任意
+      </span>
+    </summary>
+
+
+    <p class="optional-help">
+      分からない場合は「不明・入力しない」のままで構いません。
+    </p>
+
+
+
+    <div class="form-group">
+
+      <label for="technical">
+        技術的難所
+      </label>
+
+      <select id="technical">
+
+        <option value="">
+          不明・入力しない
+        </option>
+
+        <option value="0">
+          なし
+        </option>
+
+        <option value="1.5">
+          軽度
+        </option>
+
+        <option value="3">
+          あり
+        </option>
+
+      </select>
+
+    </div>
+
+
+
+    <div class="form-group">
+
+      <label for="risk">
+        滑落・転落危険箇所
+      </label>
+
+      <select id="risk">
+
+        <option value="">
+          不明・入力しない
+        </option>
+
+        <option value="0">
+          なし
+        </option>
+
+        <option value="1.5">
+          軽度
+        </option>
+
+        <option value="3">
+          あり
+        </option>
+
+      </select>
+
+    </div>
+
+
+
+    <div class="form-group">
+
+      <label for="terrain">
+        足場
+      </label>
+
+      <select id="terrain">
+
+        <option value="">
+          不明・入力しない
+        </option>
+
+        <option value="0">
+          歩きやすい
+        </option>
+
+        <option value="2">
+          やや歩きにくい
+        </option>
+
+        <option value="4">
+          歩きにくい
+        </option>
+
+      </select>
+
+    </div>
+
+
+  </details>
+
+
+
+  <!-- ========================================
+       任意の比較基準
+  ======================================== -->
+
+  <details
+    id="baselinePanel"
+    class="baseline-panel"
+  >
+
+    <summary>
+      比較基準のルートを設定する
+      <span>
+        任意
+      </span>
+    </summary>
+
+
+    <div class="baseline-intro">
+
+      <strong>
+        自分が登ったことのある山を100にできます
+      </strong>
+
+      <p>
+        ここを何も入力しなければ、
+        富士山・富士宮ルート＝100で計算します。
+      </p>
+
+      <p>
+        入力した場合は、そのルートも同じ計算式で難易度を算出し、
+        そのルートを100として診断結果を換算します。
+      </p>
+
+    </div>
+
+
+
+    <!-- 山名・ルート名 -->
+
+    <div class="form-grid">
+
+
+      <div class="form-group">
+
+        <label for="baselineMountainName">
+          山の名前
+        </label>
+
+        <input
+          type="text"
+          id="baselineMountainName"
+          placeholder="例：十勝岳"
+        >
+
+      </div>
+
+
+
+      <div class="form-group">
+
+        <label for="baselineRouteName">
+          ルート名
+        </label>
+
+        <input
+          type="text"
+          id="baselineRouteName"
+          placeholder="例：望岳台"
+        >
+
+      </div>
+
+
+    </div>
+
+
+    <p class="small-note">
+      ※比較基準を設定する場合、山の名前は入力してください。
+      ルート名は任意です。
+    </p>
+
+
+
+    <!-- 基準ルート基本データ -->
+
+    <div class="form-grid">
+
+
+      <div class="form-group">
+
+        <label for="baselineDistance">
+          総距離
+        </label>
+
+        <div class="input-row">
+
+          <input
+            type="number"
+            id="baselineDistance"
+            min="0.1"
+            step="0.1"
+            placeholder="例：10.4"
+          >
+
+          <span>
+            km
+          </span>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="form-group">
+
+        <label for="baselineElevation">
+          獲得標高
+        </label>
+
+        <div class="input-row">
+
+          <input
+            type="number"
+            id="baselineElevation"
+            min="0"
+            step="1"
+            placeholder="例：1132"
+          >
+
+          <span>
+            m
+          </span>
+
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+
+    <div class="form-group">
+
+      <label>
+        標準コースタイム
+      </label>
+
+      <div class="time-row">
+
+
+        <div class="input-row">
+
+          <input
+            type="number"
+            id="baselineHours"
+            min="0"
+            step="1"
+            placeholder="6"
+          >
+
+          <span>
+            時間
+          </span>
+
+        </div>
+
+
+
+        <div class="input-row">
+
+          <input
+            type="number"
+            id="baselineMinutes"
+            min="0"
+            max="59"
+            step="1"
+            placeholder="25"
+          >
+
+          <span>
+            分
+          </span>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+
+
+    <div class="form-grid">
+
+
+      <div class="form-group">
+
+        <label for="baselineAltitude">
+          最高標高
+        </label>
+
+        <div class="input-row">
+
+          <input
+            type="number"
+            id="baselineAltitude"
+            min="1"
+            step="1"
+            placeholder="例：2077"
+          >
+
+          <span>
+            m
+          </span>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="form-group">
+
+        <label for="baselineRouteType">
+          行程タイプ
+        </label>
+
+        <select id="baselineRouteType">
+
+          <option value="round">
+            往復
+          </option>
+
+          <option value="circuit">
+            周回
+          </option>
+
+          <option value="traverse">
+            縦走
+          </option>
+
+        </select>
+
+      </div>
+
+
+    </div>
+
+
+
+    <!-- 基準ルート技術情報 -->
+
+    <details class="baseline-tech-panel">
+
+      <summary>
+        基準ルートの技術情報
+        <span>
+          任意
+        </span>
+      </summary>
+
+
+
+      <div class="form-group">
+
+        <label for="baselineTechnical">
+          技術的難所
+        </label>
+
+        <select id="baselineTechnical">
+
+          <option value="">
+            不明・入力しない
+          </option>
+
+          <option value="0">
+            なし
+          </option>
+
+          <option value="1.5">
+            軽度
+          </option>
+
+          <option value="3">
+            あり
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <div class="form-group">
+
+        <label for="baselineRisk">
+          滑落・転落危険箇所
+        </label>
+
+        <select id="baselineRisk">
+
+          <option value="">
+            不明・入力しない
+          </option>
+
+          <option value="0">
+            なし
+          </option>
+
+          <option value="1.5">
+            軽度
+          </option>
+
+          <option value="3">
+            あり
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <div class="form-group">
+
+        <label for="baselineTerrain">
+          足場
+        </label>
+
+        <select id="baselineTerrain">
+
+          <option value="">
+            不明・入力しない
+          </option>
+
+          <option value="0">
+            歩きやすい
+          </option>
+
+          <option value="2">
+            やや歩きにくい
+          </option>
+
+          <option value="4">
+            歩きにくい
+          </option>
+
+        </select>
+
+      </div>
+
+
+    </details>
+
+
+
+    <!-- ========================================
+         基準ルート保存
+    ======================================== -->
+
+    <div class="save-baseline-box">
+
+      <label class="save-checkbox">
+
+        <input
+          type="checkbox"
+          id="saveBaseline"
+        >
+
+        <span>
+          この基準ルートをこの端末に保存する
+        </span>
+
+      </label>
+
+
+      <p class="small-note">
+        保存すると、次回このサイトを開いたときにも
+        基準ルートが自動的に入力されます。
+      </p>
+
+
+      <button
+        type="button"
+        id="clearSavedBaseline"
+        class="secondary-button"
+      >
+        保存した基準ルートを削除
+      </button>
+
+
+      <p
+        id="saveStatus"
+        class="save-status"
+      >
+      </p>
+
+    </div>
+
+
+  </details>
+
+
+
+  <button
+    type="button"
+    id="calculateButton"
+  >
+    難易度を診断する
+  </button>
+
+
+</section>
+
+
+
+<!-- ========================================
+     結果
+======================================== -->
+
+<section
+  id="result"
+  class="card result-card hidden"
+>
+
+
+  <p class="result-label">
+    DIFFICULTY INDEX
+  </p>
+
+
+  <p class="result-title">
+    このルートの難易度指数
+  </p>
+
+
+
+  <div class="score-wrap">
+
+    <div
+      id="difficultyNumber"
+      class="difficulty-number"
+    >
+      0
+    </div>
+
+    <div
+      id="scoreBaseLabel"
+      class="score-base"
+    >
+      / 富士宮 100
+    </div>
+
+  </div>
+
+
+
+  <div
+    id="difficultyClass"
+    class="difficulty-class"
+  >
+    初級
+  </div>
+
+
+  <p class="small-note center-note">
+    ※初級・中級・上級の区分は、
+    富士宮＝100の標準指数で判定しています。
+  </p>
+
+
+
+  <div class="meter-grid">
+
+
+    <div class="level-box">
+
+      <p>
+        体力レベル
+      </p>
+
+      <div
+        id="staminaStars"
+        class="stars"
+      >
+        ☆☆☆☆☆
+      </div>
+
+    </div>
+
+
+
+    <div class="level-box">
+
+      <p>
+        技術レベル
+      </p>
+
+      <div
+        id="technicalStars"
+        class="stars"
+      >
+        未判定
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+
+  <div class="confidence-row">
+
+    <span>
+      診断精度
+    </span>
+
+    <strong id="confidence">
+      基本
+    </strong>
+
+  </div>
+
+
+
+  <!-- 平均勾配 -->
+
+  <div
+    id="gradientBox"
+    class="gradient-box hidden"
+  >
+
+    <div class="gradient-row">
+
+      <span>
+        参考：平均勾配
+      </span>
+
+      <strong id="averageGradient">
+        --%
+      </strong>
+
+    </div>
+
+
+    <p>
+      ※総距離と獲得標高から算出した簡易的な平均値です。
+      途中のアップダウンや局所的な急登・緩斜面は考慮していません。
+    </p>
+
+  </div>
+
+
+
+  <!-- 基準 -->
+
+  <div class="baseline-result-box">
+
+    <p class="box-small-title">
+      今回の比較基準
+    </p>
+
+    <strong id="baselineResultTitle">
+      富士山・富士宮ルート ＝ 100
+    </strong>
+
+    <p id="baselineResultText">
+    </p>
+
+  </div>
+
+
+
+  <!-- 近い山 -->
+
+  <div class="comparison-box">
+
+    <h3>
+      近い難易度のルート
+    </h3>
+
+    <div id="comparisonList">
+    </div>
+
+  </div>
+
+
+
+  <!-- 警告 -->
+
+  <div
+    id="missingTechWarning"
+    class="warning-box hidden"
+  >
+
+    <strong>
+      技術情報が未入力または一部未入力です
+    </strong>
+
+    <p>
+      この指数は主に体力面から算出しています。
+      指数が低くても安全なルートとは限りません。
+      鎖場・ロープ場・岩場・滑落危険箇所など、
+      最新のルート情報を必ず確認してください。
+    </p>
+
+  </div>
+
+
+</section>
+
+
+
+<!-- ========================================
+     説明
+======================================== -->
+
+<section class="card about-card">
+
+  <p class="section-kicker">
+    ABOUT THIS CHECKER
+  </p>
+
+  <h2>
+    このチェッカーについて
+  </h2>
+
+
+  <p>
+    標準では、富士山・富士宮ルートを100とする独自の難易度指数で表示します。
+    100点満点ではないため、富士宮ルートより難しいルートでは100を超えます。
+  </p>
+
+
+  <p>
+    比較基準のルートを入力した場合は、
+    そのルートを同じ計算式で評価し、
+    その難易度を100として表示値を換算します。
+  </p>
+
+
+  <p>
+    本指数は体力要素を重視しています。
+    実際に登る際は、最新の登山道情報・天候・技術的難易度なども
+    必ず確認してください。
+  </p>
+
+</section>
+
+
+</main>
+
+
+
+<footer>
+
+  <p>
+    ※本診断は無雪期・一般的な天候条件を想定した目安です。
+  </p>
+
+</footer>
+
+
+
+<script src="script.js"></script>
+
+
 </body>
+
 </html>
